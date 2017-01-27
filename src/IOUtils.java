@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 /**
  * @date 24-Jan-17
- * @author Somshubra Majumdar
+ * @author Somshubra Majumdar, Omid Memarrast
  *
  * Deals with IO related tasks. Reading of input, parsing, supplying formated data to
  * MSApriorori and writing results.
