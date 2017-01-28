@@ -78,8 +78,8 @@ public class Apriori {
                     int noOfPosToCheck = itemsJ.length - 1;
                     boolean test = true; // test to see if
 
-                    for(int k = 1; k <= noOfPosToCheck; k++) {
-                        if(itemsI[itemsI.length - k] != itemsJ[k - 1]) { // break if intermediate values are different between I and J
+                    for(int k = 0; k < noOfPosToCheck; k++) {
+                        if(itemsI[k] != itemsJ[k]) { // break if intermediate values are different between I and J
                             test = false;
                             break;
                         }
