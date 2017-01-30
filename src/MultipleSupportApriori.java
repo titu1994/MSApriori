@@ -9,14 +9,11 @@ import java.util.*;
 public class MultipleSupportApriori {
 
     private static Pair counts[];
-    private static Pair initialPairs[];
-    private static Pair prevCounts[];
     private static Pair globalItemCounts[];
 
     private static ArrayList<Pair[]> kItemsetList;
 
     private static int itemSetCount = 1;
-    private static double minSupport = 0.0;
 
     public static void initCounter() {
         counts = new Pair[IOUtils.itemIDCount];
@@ -56,9 +53,6 @@ public class MultipleSupportApriori {
         for (Pair count : counts) {
             count.pairSupport /= IOUtils.transactionCount;
         }
-
-        initialPairs = new Pair[IOUtils.itemIDCount]; // Actual first candidates
-        System.arraycopy(counts, 0, initialPairs, 0, counts.length); // same as counts so copy
     }
 
     public static void computeCandidates() {
@@ -116,7 +110,6 @@ public class MultipleSupportApriori {
             }
         }
 
-        prevCounts = counts; // preserve last counts for later use
         counts = pairs.toArray(new Pair[0]); // counts now has all of the new candidates
         itemSetCount++; // marks the k in k-itemset
     }
@@ -242,17 +235,6 @@ public class MultipleSupportApriori {
         public boolean containsItem(int itemID) {
             for (Item item : items) {
                 if (item.itemID == itemID)
-                    return true;
-            }
-            return false;
-        }
-
-        /**
-         * Checks if this transaction contains a specific Item by the Item ID in the provided Item
-         */
-        public boolean containsItem(Item item) {
-            for (Item i : items) {
-                if (i.itemID == item.itemID)
                     return true;
             }
             return false;
