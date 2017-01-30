@@ -5,7 +5,7 @@
  * Class of Items in an Itemset (Transaction).
  * Convenience method to allow sort according to MinSupport (via Arrays.sort())
  */
-public class Item implements Comparable<Item> {
+public class Item implements Comparable<Item>, Cloneable {
 
     public final int itemID;
     public final double minSupport;
@@ -16,12 +16,56 @@ public class Item implements Comparable<Item> {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+
+        if (obj == null)
+            return false;
+
+        if (obj instanceof Item) {
+            Item t = (Item) obj;
+
+            if (this.itemID == t.itemID)
+                return true;
+            else
+                return false;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
     public int compareTo(Item o) {
-        return (int) ((this.minSupport - o.minSupport) * 100);
+        int val = (int) ((this.minSupport - o.minSupport) * 100);
+
+        if (val == 0)
+            return this.itemID - o.itemID;
+        else
+            return val;
     }
 
     @Override
     public String toString() {
-        return "{Item ID: " + itemID + ", " + "MinSup: " + minSupport + "}";
+        return "Item ID: " + itemID + "";
+    }
+
+    public String toString(boolean displayMinSup) {
+        if (displayMinSup) {
+            return "{Item ID: " + itemID + ", " + "MinSup: " + minSupport + "}";
+        }
+        else {
+            return "Item ID: " + itemID + "";
+        }
+    }
+
+    @Override
+    protected Item clone() {
+        try {
+            return (Item) super.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

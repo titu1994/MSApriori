@@ -1,15 +1,14 @@
 import java.util.Arrays;
 
 /**
- * @date 26-Jan-17
  * @author Somshubra Majumdar
- *
- * Holder class of a single transaction.
- * Provides convenience method to check if two transactions are same,
- * or if a transaction contains a specific Item object.
- *
+ *         <p>
+ *         Holder class of a single transaction.
+ *         Provides convenience method to check if two transactions are same,
+ *         or if a transaction contains a specific Item object.
+ * @date 26-Jan-17
  */
-public class Transaction  {
+public class Transaction {
 
     public final Item[] items;
 
@@ -33,57 +32,45 @@ public class Transaction  {
                 }
 
                 return same;
-            }
-            else {
+            } else {
                 return false;
             }
-        }
-        else {
+        } else {
             return false;
         }
     }
 
-    /**
-     * Checks if this transaction contains a specific Item by its Item ID
-     */
-    public boolean containsItem(int itemID) {
-        for (Item item : items) {
-            if (item.itemID == itemID)
-                return true;
+    public static boolean itemsetEquals(Item data[], Item check[]) {
+        if (data.length == check.length) {
+            boolean same = true;
+
+            for (int i = 0; i < data.length; i++) {
+                if (data[i].itemID != check[i].itemID) {
+                    same = false;
+                    break;
+                }
+            }
+
+            return same;
+        } else {
+            return false;
         }
-        return false;
+
     }
 
-    /**
-     * Checks if this transaction contains a specific Item by the Item ID in the provided Item
-     */
-    public boolean containsItem(Item item) {
-        for (Item i : items) {
-            if (i.itemID == item.itemID)
-                return true;
-        }
-        return false;
-    }
-
-    /**
-     * Checks if this transaction contains a specific set of Items provided by a transaction
-     *
-     * Generally used for checking if a transaction does not contain transactions specified
-     * in the "Cannot Be Together" constraint
-     */
-    public boolean containsAllItems(Transaction t) {
+    public static boolean containsAllItems(Item itemID[], Item checkItemID[]) {
         int count = 0;
 
-        for (Item i : items) {
-            for (Item ti : t.items) {
-                if (ti.itemID == i.itemID) {
+        for (Item id : itemID) {
+            for (Item checkID : checkItemID) {
+                if (id.itemID == checkID.itemID) {
                     count++;
                     break;
                 }
             }
         }
 
-        return count == t.items.length;
+        return count == checkItemID.length;
     }
 
     @Override

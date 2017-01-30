@@ -3,8 +3,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,7 +24,7 @@ public class IOUtils {
     public static Transaction[] transactions;
 
     // Map of Items (item ids) to their minimum supports
-    public static HashMap<Integer, Double> minSupports;
+    public static LinkedHashMap<Integer, Double> minSupports;
 
     // Support difference constraint
     public static double supportDifferenceConstraint = 0.0;
@@ -35,6 +34,12 @@ public class IOUtils {
 
     // Array of item ids that must be present
     public static int mustContain[];
+
+    // Number of transactions present in transaction set
+    public static int transactionCount = 0;
+
+    // Number of unique item IDs
+    public static int itemIDCount = 0;
 
     public static Transaction[] loadTransactions(String transactionsPath, String parameterPath) {
         ArrayList<Transaction> transactionList = new ArrayList<>();
@@ -78,11 +83,14 @@ public class IOUtils {
             e.printStackTrace();
         }
         transactions = transactionList.toArray(new Transaction[0]);
+
+        transactionCount = transactions.length;
+
         return transactions;
     }
 
     private static void loadParameters(String parameterPath) throws FileNotFoundException {
-        minSupports = new HashMap<>();
+        minSupports = new LinkedHashMap<>();
 
         ArrayList<Transaction> cannotBeTogetherList = new ArrayList<>();
         ArrayList<Integer> mustContainList = new ArrayList<>();
@@ -131,6 +139,8 @@ public class IOUtils {
         double mis = Double.parseDouble(parts[1].replace(" ", ""));
 
         minSupports.put(itemID, mis);
+
+        itemIDCount++;
     }
 
     private static void setSupportDifferenceConstraint(String line) {
@@ -184,25 +194,25 @@ public class IOUtils {
     }
 
 
-    public static void main(String[] args) {
-        // Test functionality of IOUtils model
-        Transaction[] transactions = IOUtils.loadTransactions(IOUtils.INPUT_TRANSACTION_PATH, IOUtils.INPUT_PARAMETERS_PATH);
-
-        System.out.println("\nTransactions : ");
-        for (Transaction transaction : transactions) {
-            System.out.println(transaction);
-        }
-
-        System.out.println("\nSupport Difference Constraint : " + supportDifferenceConstraint);
-
-        System.out.println("\nCannot Be Together : ");
-
-        for (Transaction t : cannotBeTogether) {
-            System.out.println(t);
-        }
-
-        System.out.println("\nMust Contain : " + Arrays.toString(mustContain));
-    }
+//    public static void main(String[] args) {
+//        // Test functionality of IOUtils model
+//        Transaction[] transactions = IOUtils.loadTransactions(IOUtils.INPUT_TRANSACTION_PATH, IOUtils.INPUT_PARAMETERS_PATH);
+//
+//        System.out.println("\nTransactions : ");
+//        for (Transaction transaction : transactions) {
+//            System.out.println(transaction);
+//        }
+//
+//        System.out.println("\nSupport Difference Constraint : " + supportDifferenceConstraint);
+//
+//        System.out.println("\nCannot Be Together : ");
+//
+//        for (Transaction t : cannotBeTogether) {
+//            System.out.println(t);
+//        }
+//
+//        System.out.println("\nMust Contain : " + Arrays.toString(mustContain));
+//    }
 
 
 }
