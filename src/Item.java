@@ -47,15 +47,15 @@ public class Item implements Comparable<Item>, Cloneable {
 
     @Override
     public String toString() {
-        return "Item ID: " + itemID + "";
+        return  "" + itemID;
     }
 
     public String toString(boolean displayMinSup) {
         if (displayMinSup) {
-            return "{Item ID: " + itemID + ", " + "MinSup: " + minSupport + "}";
+            return "" + itemID + ", " + "MinSup: " + minSupport;
         }
         else {
-            return "Item ID: " + itemID + "";
+            return "" + itemID;
         }
     }
 

@@ -51,6 +51,7 @@ public class MultipleSupportApriori {
 
         // Calculate initial minimum support for each item id
         for (Pair count : counts) {
+            count.frequency = (int) count.pairSupport;
             count.pairSupport /= IOUtils.transactionCount;
         }
     }
@@ -110,6 +111,11 @@ public class MultipleSupportApriori {
             }
         }
 
+        for (Pair p : pairs) {
+            p.frequency = (int) p.pairSupport;
+            p.pairSupport /= IOUtils.transactionCount;
+        }
+
         counts = pairs.toArray(new Pair[0]); // counts now has all of the new candidates
         itemSetCount++; // marks the k in k-itemset
     }
@@ -131,13 +137,17 @@ public class MultipleSupportApriori {
         }
 
         // Remove all pairs who do not satisfy the support difference constraint
+        System.out.println("Before removing SDC : " + pairs.size());
         pairs = handleSupportDifferenceConstraint(pairs);
+        System.out.println("After removing SDC : " + pairs.size());
 
         // Remove all pairs which have items that cannot be together
         pairs = handleCannotBeTogether(pairs);
+        System.out.println("After removing cannot be together : " + pairs.size());
 
-//        // Remove all pairs which do not have at least one of the Must Have category
+        // Remove all pairs which do not have at least one of the Must Have category
 //        pairs = handleAtleastOneMustBePresent(pairs);
+//        System.out.println("After removing must be at least one : " + pairs.size());
 
         counts = pairs.toArray(new Pair[0]); // replace counts with reduced set
     }
@@ -191,8 +201,10 @@ public class MultipleSupportApriori {
             boolean hasAtLeastOneMatchingItem = false;
 
             for (int id : IOUtils.mustContain) {
-                if (p.containsItem(id))
-                    hasAtLeastOneMatchingItem |= true;
+                if (p.containsItem(id)) {
+                    hasAtLeastOneMatchingItem = true;
+                    break;
+                }
             }
 
             if (hasAtLeastOneMatchingItem)
@@ -207,10 +219,20 @@ public class MultipleSupportApriori {
 
         public Item items[];
         public double pairSupport = 0.0;
+        public int frequency = 0;
+        public int tailcount = 0;
 
         @Override
         public String toString() {
-            return "(" + Arrays.toString(items) + ", " + pairSupport + ")";
+            String itemNames = Arrays.toString(items);
+            itemNames = itemNames.replace("[", "{").replace("]", "}");
+
+            String string = "\t" + frequency + " : " + itemNames;
+
+            if (tailcount != 0)
+                string = string + "\nTailcount = " + tailcount;
+
+            return string;
         }
 
         @Override
