@@ -1,17 +1,17 @@
 import java.util.*;
 
 /**
- * @date 24-Jan-17
  * @author Omid, Somshubra Majumdar
- *
- * Implementation of Multiple Support Apriori algorithm.
+ *         <p>
+ *         Implementation of Multiple Support Apriori algorithm.
+ * @date 24-Jan-17
  */
 public class MultipleSupportApriori {
 
     private static Pair counts[];
     private static Pair globalItemCounts[];
 
-    private static ArrayList<Pair[]> kItemsetList;
+    private static ArrayList<Pair> kItemsetList;
 
     private static int itemSetCount = 1;
 
@@ -69,36 +69,44 @@ public class MultipleSupportApriori {
                 Arrays.sort(itemsJ); // Sort according to Minimum Item Support
                 System.arraycopy(itemsI, 0, itemset, 0, itemsI.length); // Copy old itemsI, only increase by 1
 
-                if(itemsJ.length > 1) { // need to generalize
+                if (itemsJ.length > 1) { // need to generalize
                     int noOfPosToCheck = itemsJ.length - 1;
                     boolean test = true; // test to see if
 
-                    for(int k = 0; k < noOfPosToCheck; k++) {
-                        if(!itemsI[k].equals(itemsJ[k])) { // break if intermediate values are different between I and J
+                    for (int k = 0; k < noOfPosToCheck; k++) {
+                        if (!itemsI[k].equals(itemsJ[k])) { // break if intermediate values are different between I and J
                             test = false;
                             break;
                         }
                     }
 
-                    if(test) {
+                    if (test) {
                         itemset[itemset.length - 1] = itemsJ[itemsJ.length - 1]; // merge I with J (last element of J), remaining same
-                    }
-                    else {
+                    } else {
                         continue; // search next candidate if fit to merge
                     }
-                }
-                else {
+                } else {
                     // special case for 1st iteration, where Item J has only 1 item.
                     // generates : {1, 2}, {1, 3}, {1, 4}, {1, 5}, {2, 3}, {2, 4}, {2, 5},
                     // {3, 4}, {3, 5}, {4, 5}
                     itemset[itemset.length - 1] = counts[j].items[0]; // select next item after this one to be merged
                 }
 
+                int tailCount = 0;
+                itemsI = Arrays.copyOfRange(itemset, 1, itemset.length); // Select only c - c[1]
+
+                for (Transaction t : IOUtils.transactions) {
+                    if (Transaction.containsAllItems(t.items, itemsI)) {
+                        tailCount++;
+                    }
+                }
+
+
                 int supportCount = 0;
 
                 // Compare the new item set to see if old one contains these items, computing support count for k-itemset
-                for(Pair p : globalItemCounts) {
-                    if(Pair.containsAll(p.items, itemset)) {
+                for (Pair p : globalItemCounts) {
+                    if (Pair.containsAll(p.items, itemset)) {
                         supportCount++;
                     }
                 }
@@ -106,6 +114,7 @@ public class MultipleSupportApriori {
                 Pair p = new Pair();
                 p.pairSupport = supportCount;
                 p.items = itemset;
+                p.tailcount = tailCount;
 
                 pairs.add(p); // Construct the new merged k-itemset
             }
@@ -114,6 +123,7 @@ public class MultipleSupportApriori {
         for (Pair p : pairs) {
             p.frequency = (int) p.pairSupport;
             p.pairSupport /= IOUtils.transactionCount;
+            Arrays.sort(p.items);
         }
 
         counts = pairs.toArray(new Pair[0]); // counts now has all of the new candidates
@@ -124,6 +134,7 @@ public class MultipleSupportApriori {
     public static void removeLessSupport() {
         ArrayList<Pair> pairs = new ArrayList<>();
 
+        System.out.println("Before Reduction : " + counts.length);
         for (Pair p : counts) { // Add all pairs who satisfy the min support criterion
             double minimumSupport = 1.0;
 
@@ -137,17 +148,16 @@ public class MultipleSupportApriori {
         }
 
         // Remove all pairs who do not satisfy the support difference constraint
-        System.out.println("Before removing SDC : " + pairs.size());
         pairs = handleSupportDifferenceConstraint(pairs);
-        System.out.println("After removing SDC : " + pairs.size());
+        System.out.println("After removing 'SDC' violations : " + pairs.size());
 
         // Remove all pairs which have items that cannot be together
         pairs = handleCannotBeTogether(pairs);
-        System.out.println("After removing cannot be together : " + pairs.size());
+        System.out.println("After removing 'cannot be together' violations : " + pairs.size());
 
         // Remove all pairs which do not have at least one of the Must Have category
-//        pairs = handleAtleastOneMustBePresent(pairs);
-//        System.out.println("After removing must be at least one : " + pairs.size());
+        kItemsetList = handleAtleastOneMustBePresent(pairs);
+        System.out.println("After removing 'must be at least one' violations : " + kItemsetList.size());
 
         counts = pairs.toArray(new Pair[0]); // replace counts with reduced set
     }
@@ -230,7 +240,7 @@ public class MultipleSupportApriori {
             String string = "\t" + frequency + " : " + itemNames;
 
             if (tailcount != 0)
-                string = string + "\nTailcount = " + tailcount;
+                string = string + ", Tailcount = " + tailcount + "";
 
             return string;
         }
@@ -270,22 +280,26 @@ public class MultipleSupportApriori {
         System.out.println("\nInitial : " + Arrays.toString(counts));
 
         removeLessSupport();
-        System.out.println("Reduction : " + Arrays.toString(counts));
+        Pair[] kitemset = kItemsetList.toArray(new Pair[0]);
+        System.out.println("Reduction : " + Arrays.toString(kitemset));
 
-        while(counts.length > 1) { // implementation specific, need to change for MSApriori
+        while (counts.length > 1) { // implementation specific, need to change for MSApriori
             System.out.println();
 
-            if(counts.length > 1) {
+            if (counts.length > 1) {
                 computeCandidates();
+
                 System.out.println("Candidates : " + Arrays.toString(counts));
             }
 
             removeLessSupport();
-            System.out.println("Reduction : " + Arrays.toString(counts));
-            System.out.println("Total no. of " + itemSetCount + "-frequent itemsets : " + counts.length);
+            kitemset = kItemsetList.toArray(new Pair[0]);
+            System.out.println("Reduction : " + Arrays.toString(kitemset));
+            System.out.println("Total no. of " + itemSetCount + "-frequent itemsets : " + kitemset.length);
         }
 
         System.out.println("Final itemset : " + Arrays.toString(counts));
     }
 
 }
+
