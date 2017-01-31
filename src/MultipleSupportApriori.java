@@ -65,8 +65,6 @@ public class MultipleSupportApriori {
                 Item itemsI[] = counts[i].items; // Convenience to select Current itemset
                 Item itemsJ[] = counts[j].items; // Convenience to select all other itemset iteratively
 
-                Arrays.sort(itemsI); // Sort according to Minimum Item Support
-                Arrays.sort(itemsJ); // Sort according to Minimum Item Support
                 System.arraycopy(itemsI, 0, itemset, 0, itemsI.length); // Copy old itemsI, only increase by 1
 
                 if (itemsJ.length > 1) { // need to generalize
@@ -92,6 +90,8 @@ public class MultipleSupportApriori {
                     itemset[itemset.length - 1] = counts[j].items[0]; // select next item after this one to be merged
                 }
 
+                Arrays.sort(itemset); // sort by minsupport values
+
                 // Compute tail count
                 int tailCount = 0;
                 itemsI = Arrays.copyOfRange(itemset, 1, itemset.length); // Select only {c} - {c[1]}
@@ -102,6 +102,7 @@ public class MultipleSupportApriori {
                     }
                 }
 
+                // Compute support count of pair
                 int supportCount = 0;
 
                 // Compare the new item set to see if old one contains these items, computing support count for k-itemset
@@ -117,16 +118,15 @@ public class MultipleSupportApriori {
                 p.items = itemset;
                 p.tailcount = tailCount;
 
-                pairs.add(p); // Construct the new merged k-itemset
+                pairs.add(p); // Append the k-itemset
             }
         }
 
         for (Pair p : pairs) {
             p.pairSupport /= IOUtils.transactionCount; // normalize the pair support value to [0, 1]
-            Arrays.sort(p.items); // sort to maintain min support ordering
         }
 
-        counts = pairs.toArray(new Pair[0]); // counts now has all of the new candidates
+        counts = pairs.toArray(new Pair[0]); // counts now updates with all of the new candidates
         itemSetCount++; // marks the k in k-itemset
     }
 
