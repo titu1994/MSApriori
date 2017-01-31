@@ -92,15 +92,15 @@ public class MultipleSupportApriori {
                     itemset[itemset.length - 1] = counts[j].items[0]; // select next item after this one to be merged
                 }
 
+                // Compute tail count
                 int tailCount = 0;
-                itemsI = Arrays.copyOfRange(itemset, 1, itemset.length); // Select only c - c[1]
+                itemsI = Arrays.copyOfRange(itemset, 1, itemset.length); // Select only {c} - {c[1]}
 
                 for (Transaction t : IOUtils.transactions) {
                     if (Transaction.containsAllItems(t.items, itemsI)) {
                         tailCount++;
                     }
                 }
-
 
                 int supportCount = 0;
 
@@ -113,6 +113,7 @@ public class MultipleSupportApriori {
 
                 Pair p = new Pair();
                 p.pairSupport = supportCount;
+                p.frequency = supportCount;
                 p.items = itemset;
                 p.tailcount = tailCount;
 
@@ -121,9 +122,8 @@ public class MultipleSupportApriori {
         }
 
         for (Pair p : pairs) {
-            p.frequency = (int) p.pairSupport;
-            p.pairSupport /= IOUtils.transactionCount;
-            Arrays.sort(p.items);
+            p.pairSupport /= IOUtils.transactionCount; // normalize the pair support value to [0, 1]
+            Arrays.sort(p.items); // sort to maintain min support ordering
         }
 
         counts = pairs.toArray(new Pair[0]); // counts now has all of the new candidates
