@@ -8,25 +8,32 @@ import java.util.*;
  */
 public class MultipleSupportApriori {
 
-    private static Pair counts[];
-    private static Pair globalItemCounts[];
+    private static Candidate counts[];
+    private static Candidate globalItemCounts[];
 
-    private static ArrayList<Pair> kItemsetList;
+    private static ArrayList<Candidate> kItemsetList;
+    private static ArrayList<Integer[]> permutations;
+
+    private static ArrayList<Integer> reducedIndicesSet;
+    private static ArrayList<Integer[]> validSets;
 
     private static int itemSetCount = 1;
 
     public static void initCounter() {
-        counts = new Pair[IOUtils.itemIDCount];
-        globalItemCounts = new Pair[IOUtils.transactionCount];
+        counts = new Candidate[IOUtils.itemIDCount];
+        globalItemCounts = new Candidate[IOUtils.transactionCount];
 
         kItemsetList = new ArrayList<>();
+        permutations = new ArrayList<>();
+        reducedIndicesSet = new ArrayList<>();
+        validSets = new ArrayList<>();
 
         // Temporary map which provides mapping from Item ID to 'counts' array index
         LinkedHashMap<Integer, Integer> countIndexMap = new LinkedHashMap<>();
 
         int x = 0, y = 0;
         for (Map.Entry<Integer, Double> entry : IOUtils.minSupports.entrySet()) {
-            counts[x] = new Pair();
+            counts[x] = new Candidate();
             counts[x++].items = new Item[]{new Item(entry.getKey(), entry.getValue())};
 
             countIndexMap.put(entry.getKey(), x - 1); // Preserve item id mapping to index of counts array
@@ -36,13 +43,13 @@ public class MultipleSupportApriori {
         x = 0;
 
         for (Transaction t : IOUtils.transactions) {
-            globalItemCounts[x] = new Pair();
+            globalItemCounts[x] = new Candidate();
             globalItemCounts[x].items = new Item[t.items.length];
             y = 0;
 
             for (Item item : t.items) { // for each char in each string input
                 cindex = countIndexMap.get(item.itemID); // returns the index in counts array for a specific item id
-                counts[cindex].pairSupport++; // increase support val of 1, 2, 3, ... input data points
+                counts[cindex].candidateSupport++; // increase support val of 1, 2, 3, ... input data points
                 globalItemCounts[x].items[y] = item.clone(); // initialize to the value of input (1, 3, 4), (2, 3, 5) and so on
                 y++; // Next item
             }
@@ -50,17 +57,17 @@ public class MultipleSupportApriori {
         }
 
         // Calculate initial minimum support for each item id
-        for (Pair count : counts) {
-            count.frequency = (int) count.pairSupport;
-            count.pairSupport /= IOUtils.transactionCount;
+        for (Candidate count : counts) {
+            count.frequency = (int) count.candidateSupport;
+            count.candidateSupport /= IOUtils.transactionCount;
         }
     }
 
     public static void computeCandidates() {
-        ArrayList<Pair> pairs = new ArrayList<>();
+        ArrayList<Candidate> candidates = new ArrayList<>();
 
         for (int i = 0; i < counts.length; i++) { // search each and every pair of counts
-            for (int j = i + 1; j < counts.length; j++) { // with all other pairs
+            for (int j = i + 1; j < counts.length; j++) { // with all other candidates
                 Item itemset[] = new Item[itemSetCount + 1]; // Increase size of itemset by 1
                 Item itemsI[] = counts[i].items; // Convenience to select Current itemset
                 Item itemsJ[] = counts[j].items; // Convenience to select all other itemset iteratively
@@ -106,66 +113,138 @@ public class MultipleSupportApriori {
                 int supportCount = 0;
 
                 // Compare the new item set to see if old one contains these items, computing support count for k-itemset
-                for (Pair p : globalItemCounts) {
-                    if (Pair.containsAll(p.items, itemset)) {
+                for (Candidate p : globalItemCounts) {
+                    if (Candidate.containsAll(p.items, itemset)) {
                         supportCount++;
                     }
                 }
 
-                Pair p = new Pair();
-                p.pairSupport = supportCount;
+                Candidate p = new Candidate();
+                p.candidateSupport = supportCount;
                 p.frequency = supportCount;
                 p.items = itemset;
                 p.tailcount = tailCount;
 
-                pairs.add(p); // Append the k-itemset
+                candidates.add(p); // Append the k-itemset
             }
         }
 
-        for (Pair p : pairs) {
-            p.pairSupport /= IOUtils.transactionCount; // normalize the pair support value to [0, 1]
+        for (Candidate p : candidates) {
+            p.candidateSupport /= IOUtils.transactionCount; // normalize the pair support value to [0, 1]
         }
 
-        counts = pairs.toArray(new Pair[0]); // counts now updates with all of the new candidates
+        counts = candidates.toArray(new Candidate[0]); // counts now updates with all of the new candidates
         itemSetCount++; // marks the k in k-itemset
     }
 
 
     public static void removeLessSupport() {
-        ArrayList<Pair> pairs = new ArrayList<>();
+        ArrayList<Candidate> candidates = new ArrayList<>();
 
         System.out.println("Before Reduction : " + counts.length);
-        for (Pair p : counts) { // Add all pairs who satisfy the min support criterion
-            double minimumSupport = 1.0;
+        double minimumSupport = 0.0;
 
-            for (Item item : p.items) { // calculate the minimum item support of all items in that pair
-                if (item.minSupport <= minimumSupport)
-                    minimumSupport = item.minSupport;
+        if (itemSetCount <= 2) {
+            for (Candidate c : counts) { // Add all candidates who satisfy the min support criterion
+                minimumSupport = c.items[0].minSupport; // sorted in min support order, 1st item guaranteed to be smallest minSupport
+
+                if (c.candidateSupport > minimumSupport)
+                    candidates.add(c); // select only those candidates which have value above min support
+            }
+        }
+        else {
+            int subsetSize = itemSetCount - 1;
+            boolean candidateMISTest = false;
+            Item candidateSubset[] = new Item[subsetSize];
+
+            reducedIndicesSet.clear();
+
+            for (int i = 0; i <= subsetSize; i++) {
+                reducedIndicesSet.add(i); // [0 to subsetSize-1] will be used for permutations
             }
 
-            if (p.pairSupport >= minimumSupport)
-                pairs.add(p); // select only those pairs which have value above min support
+            for (Candidate c : counts) { // Add all candida
+                minimumSupport = c.items[0].minSupport; // sorted in min support order, 1st item guaranteed to be smallest minSupport
+
+                if (c.candidateSupport > minimumSupport){ // support > minSupporttes who satisfy the min support criterion and MS subset check
+                    Item C1 = c.items[0];
+
+                    // Generate {k-1}-subsets s of candidate c which satisfy fact that {C1} belongs to s
+                    Item[] reducedSet = Arrays.copyOfRange(c.items, 1, c.items.length); // all items other than C1
+
+                    permutations.clear();
+                    validSets.clear();
+
+                    permute(reducedIndicesSet, 0); // get all permutations
+
+                    for (Integer[] permutation : permutations) {
+                        if (permutation[0] == 0) {
+                            validSets.add(permutation); // select only those permutations which have the 1st element indices in 1st position
+                        }
+                    }
+
+                    candidateSubset[0] = C1; // add 1st element to candidate subset
+
+                    for (int i = 0; i < validSets.size(); i++) {
+                        for (int j = 1; j < subsetSize; j++) {
+                            // valid set contains [0, 1, 2], [0, 2, 1] for 3rd iteration.
+                            // Now valid.get(0) = [0, 1, 2]
+                            // Then, (valid.get(0)[1] - 1) = 1 - 1 = 0th index of reducedSet
+                            // 0th index of reduced set = 20 for 3rd iteration of algorithm
+                            candidateSubset[j] = reducedSet[(validSets.get(i)[j] - 1)]; // candidate subset generated
+                        }
+
+                        candidateMISTest = candidateSubset[0].minSupport == candidateSubset[1].minSupport; // test as given in algorithm
+                        boolean candidateSubsetExistWithInCandidateGen = false;
+
+                        if (candidateMISTest) { // Here, we do not need to check if C[1] in test as we have constructed subset to have C1 at 1st element
+                            for (int k = 0; k < counts.length; k++) {
+                                if (Transaction.containsAllItems(counts[k].items, candidateSubset)) {
+                                    candidateSubsetExistWithInCandidateGen = true;
+                                    break;
+                                }
+                            }
+
+                            if (candidateSubsetExistWithInCandidateGen) {
+                                candidates.add(c);
+                            }
+                            else {
+                                // Delete the candidate (by not inserting it into next step candidates
+                            }
+                            break;
+                        }
+                        else {
+                            // Just add since it doesnt satisfy the check on line 9 pg 33 (Web Data Mining).
+                            // Therefore no need to check anything to remove.
+                            candidates.add(c);
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
-        // Remove all pairs who do not satisfy the support difference constraint
-        pairs = handleSupportDifferenceConstraint(pairs);
-        System.out.println("After removing 'SDC' violations : " + pairs.size());
+        System.out.println("After primary reduction : " + candidates.size());
 
-        // Remove all pairs which have items that cannot be together
-        pairs = handleCannotBeTogether(pairs);
-        System.out.println("After removing 'cannot be together' violations : " + pairs.size());
+        // Remove all candidates who do not satisfy the support difference constraint
+        candidates = handleSupportDifferenceConstraint(candidates);
+        System.out.println("After removing 'SDC' violations : " + candidates.size());
 
-        // Remove all pairs which do not have at least one of the Must Have category
-        kItemsetList = handleAtleastOneMustBePresent(pairs);
+        // Remove all candidates which have items that cannot be together
+        candidates = handleCannotBeTogether(candidates);
+        System.out.println("After removing 'cannot be together' violations : " + candidates.size());
+
+        // Remove all candidates which do not have at least one of the Must Have category
+        kItemsetList = handleAtleastOneMustBePresent(candidates);
         System.out.println("After removing 'must be at least one' violations : " + kItemsetList.size());
 
-        counts = pairs.toArray(new Pair[0]); // replace counts with reduced set
+        counts = candidates.toArray(new Candidate[0]); // replace counts with reduced set
     }
 
-    public static ArrayList<Pair> handleSupportDifferenceConstraint(ArrayList<Pair> pairs) {
-        ArrayList<Pair> reducedPairs = new ArrayList<>();
+    public static ArrayList<Candidate> handleSupportDifferenceConstraint(ArrayList<Candidate> candidates) {
+        ArrayList<Candidate> reducedCandidates = new ArrayList<>();
 
-        for (Pair p : pairs) {
+        for (Candidate p : candidates) {
             double max = 0.0, min = 1.0;
 
             for (Item item : p.items) {
@@ -178,15 +257,15 @@ public class MultipleSupportApriori {
             }
 
             if ((max - min) <= IOUtils.supportDifferenceConstraint)
-                reducedPairs.add(p);
+                reducedCandidates.add(p);
         }
-        return reducedPairs;
+        return reducedCandidates;
     }
 
-    public static ArrayList<Pair> handleCannotBeTogether(ArrayList<Pair> pairs) {
-        ArrayList<Pair> reducedPair = new ArrayList<>();
+    public static ArrayList<Candidate> handleCannotBeTogether(ArrayList<Candidate> candidates) {
+        ArrayList<Candidate> reducedCandidate = new ArrayList<>();
 
-        for (Pair p : pairs) {
+        for (Candidate p : candidates) {
             boolean testIfPairHasNoneOfCannotBeTogetherItems = true;
 
             for (Transaction t : IOUtils.cannotBeTogether) {
@@ -197,17 +276,17 @@ public class MultipleSupportApriori {
             }
 
             if (testIfPairHasNoneOfCannotBeTogetherItems)
-                reducedPair.add(p);
+                reducedCandidate.add(p);
         }
 
-        return reducedPair;
+        return reducedCandidate;
     }
 
 
-    public static ArrayList<Pair> handleAtleastOneMustBePresent(ArrayList<Pair> pairs) {
-        ArrayList<Pair> reducedPair = new ArrayList<>();
+    public static ArrayList<Candidate> handleAtleastOneMustBePresent(ArrayList<Candidate> candidates) {
+        ArrayList<Candidate> reducedCandidate = new ArrayList<>();
 
-        for (Pair p : pairs) {
+        for (Candidate p : candidates) {
             boolean hasAtLeastOneMatchingItem = false;
 
             for (int id : IOUtils.mustContain) {
@@ -218,17 +297,28 @@ public class MultipleSupportApriori {
             }
 
             if (hasAtLeastOneMatchingItem)
-                reducedPair.add(p);
+                reducedCandidate.add(p);
         }
 
-        return reducedPair;
+        return reducedCandidate;
+    }
+
+    static void permute(ArrayList<Integer> arr, int k){
+        for(int i = k; i < arr.size(); i++){
+            Collections.swap(arr, i, k);
+            permute(arr, k+1);
+            Collections.swap(arr, k, i);
+        }
+        if (k == arr.size() -1){
+            permutations.add(arr.toArray(new Integer[0]));
+        }
     }
 
 
-    private static class Pair {
+    private static class Candidate {
 
         public Item items[];
-        public double pairSupport = 0.0;
+        public double candidateSupport = 0.0;
         public int frequency = 0;
         public int tailcount = 0;
 
@@ -247,9 +337,9 @@ public class MultipleSupportApriori {
 
         @Override
         public boolean equals(Object obj) {
-            Pair t = null;
-            if (obj instanceof Pair)
-                t = (Pair) obj;
+            Candidate t = null;
+            if (obj instanceof Candidate)
+                t = (Candidate) obj;
 
             if (t == null)
                 return false;
@@ -280,7 +370,8 @@ public class MultipleSupportApriori {
         System.out.println("\nInitial : " + Arrays.toString(counts));
 
         removeLessSupport();
-        Pair[] kitemset = kItemsetList.toArray(new Pair[0]);
+        Candidate[] kitemset = kItemsetList.toArray(new Candidate[0]);
+        System.out.println("Candidate Prior Reduction : " + Arrays.toString(counts));
         System.out.println("Reduction : " + Arrays.toString(kitemset));
 
         while (counts.length > 1) { // implementation specific, need to change for MSApriori
@@ -288,17 +379,22 @@ public class MultipleSupportApriori {
 
             if (counts.length > 1) {
                 computeCandidates();
-
-                System.out.println("Candidates : " + Arrays.toString(counts));
+                if (counts.length >= 1)
+                    System.out.println("Candidates : " + Arrays.toString(counts));
+                else {
+                    break;
+                }
             }
 
             removeLessSupport();
-            kitemset = kItemsetList.toArray(new Pair[0]);
+            kitemset = kItemsetList.toArray(new Candidate[0]);
+
+            System.out.println("Candidate Prior Reduction : " + Arrays.toString(counts));
             System.out.println("Reduction : " + Arrays.toString(kitemset));
             System.out.println("Total no. of " + itemSetCount + "-frequent itemsets : " + kitemset.length);
         }
 
-        System.out.println("Final itemset : " + Arrays.toString(counts));
+        //System.out.println("Final itemset : " + Arrays.toString(counts));
     }
 
 }
