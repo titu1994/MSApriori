@@ -285,8 +285,8 @@ public class Apriori {
         initCounter();
         System.out.println("Initial : " + Arrays.toString(counts));
 
-
-        while(counts.length > 1) { // implementation specific, need to change for MSApriori
+        int K = 2;
+        while(counts.length > 1 && K < 10) { // implementation specific, need to change for MSApriori
             removeLessSupport();
             System.out.println("Reduction : " + Arrays.toString(counts));
 
@@ -294,6 +294,8 @@ public class Apriori {
                 computeCandidates();
                 System.out.println("Candidates : " + Arrays.toString(counts));
             }
+
+            K++; // hardline limit to 10 iterations to avoid combinatorial explosion
         }
 
         System.out.println("Final itemset : " + Arrays.toString(counts));
