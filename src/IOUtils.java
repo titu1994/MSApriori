@@ -1,7 +1,4 @@
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.regex.Matcher;
@@ -17,8 +14,10 @@ import java.util.regex.Pattern;
 public class IOUtils {
 
     // Relative path of default files
-    public static final String INPUT_TRANSACTION_PATH = "data\\input-data.txt";
-    public static final String INPUT_PARAMETERS_PATH = "data\\parameter-file.txt";
+    public static final String INPUT_TRANSACTION_PATH = "data\\input-data-anna.txt";
+    public static final String INPUT_PARAMETERS_PATH = "data\\parameter-file-anna.txt";
+
+    public static final String OUTPUT_RESULT = "data\\output.txt";
 
     // Array of all transactions
     public static Transaction[] transactions;
@@ -40,6 +39,8 @@ public class IOUtils {
 
     // Number of unique item IDs
     public static int itemIDCount = 0;
+
+    private static PrintWriter pr;
 
     public static Transaction[] loadTransactions(String transactionsPath, String parameterPath) {
         ArrayList<Transaction> transactionList = new ArrayList<>();
@@ -194,7 +195,36 @@ public class IOUtils {
     }
 
 
-//    public static void main(String[] args) {
+    public static void initializeOutputWriter(String outputPath) {
+        try {
+            pr = new PrintWriter(new BufferedWriter(new FileWriter(outputPath)), true);
+        } catch (IOException e) {
+            System.out.println("Failed to initialize writer");
+            e.printStackTrace();
+        }
+    }
+
+    public static void writeItemsetHeader(int itemsetCount) {
+        pr.println("Frequent " + itemsetCount + "-itemsets");
+        pr.println();
+    }
+
+    public static void writeCandidates(MultipleSupportApriori.Candidate candidates[]) {
+        for (MultipleSupportApriori.Candidate c : candidates) {
+            pr.println(c.toString(true));
+        }
+    }
+
+    public static void writeCandidateCounts(int itemsetCount, int candidateCount) {
+        pr.println("\n\tTotal number of frequent " + itemsetCount + "-itemsets = " + candidateCount);
+        pr.println();
+    }
+
+    public static void closeWriter() {
+        pr.close();
+    }
+
+    //    public static void main(String[] args) {
 //        // Test functionality of IOUtils model
 //        Transaction[] transactions = IOUtils.loadTransactions(IOUtils.INPUT_TRANSACTION_PATH, IOUtils.INPUT_PARAMETERS_PATH);
 //

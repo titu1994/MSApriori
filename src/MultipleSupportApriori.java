@@ -146,8 +146,11 @@ public class MultipleSupportApriori {
             for (Candidate c : counts) { // Add all candidates who satisfy the min support criterion
                 minimumSupport = c.items[0].minSupport; // sorted in min support order, 1st item guaranteed to be smallest minSupport
 
-                if (c.candidateSupport > minimumSupport)
+                if (c.candidateSupport >= minimumSupport)
                     candidates.add(c); // select only those candidates which have value above min support
+                else {
+                    // System.out.println("Removing candidate : " + c + " Candidate Support :" + c.candidateSupport + " Minimum support : " + minimumSupport);
+                }
             }
         }
         else if (itemSetCount == 2) {
@@ -156,7 +159,7 @@ public class MultipleSupportApriori {
                 lSupport = c.items[0].minSupport; // sorted in min support order, 1st item guaranteed to be smallest minSupport
                 hSupport = c.items[1].minSupport; // sorted in min support order, 2nd item guaranteed to be larger minSupport
 
-                if (hSupport >= lSupport && (hSupport - lSupport <= IOUtils.supportDifferenceConstraint))
+                if (hSupport >= lSupport && ((hSupport - lSupport) <= IOUtils.supportDifferenceConstraint) && c.candidateSupport != 0)
                     candidates.add(c); // select only those candidates which have value above min support
             }
         }
@@ -254,7 +257,6 @@ public class MultipleSupportApriori {
                 if (item.minSupport >= max)
                     max = item.minSupport;
 
-
                 if (item.minSupport < min)
                     min = item.minSupport;
             }
@@ -263,6 +265,19 @@ public class MultipleSupportApriori {
                 reducedCandidates.add(p);
         }
         return reducedCandidates;
+    }
+
+    private static boolean checkCandidateMustBeThere(Candidate p) {
+        boolean hasAtLeastOneMatchingItem = false;
+
+        for (int id : IOUtils.mustContain) {
+            if (p.containsItem(id)) {
+                hasAtLeastOneMatchingItem = true;
+                break;
+            }
+        }
+
+        return hasAtLeastOneMatchingItem;
     }
 
     public static ArrayList<Candidate> handleCannotBeTogether(ArrayList<Candidate> candidates) {
@@ -290,16 +305,7 @@ public class MultipleSupportApriori {
         ArrayList<Candidate> reducedCandidate = new ArrayList<>();
 
         for (Candidate p : candidates) {
-            boolean hasAtLeastOneMatchingItem = false;
-
-            for (int id : IOUtils.mustContain) {
-                if (p.containsItem(id)) {
-                    hasAtLeastOneMatchingItem = true;
-                    break;
-                }
-            }
-
-            if (hasAtLeastOneMatchingItem)
+            if (checkCandidateMustBeThere(p))
                 reducedCandidate.add(p);
         }
 
@@ -320,7 +326,7 @@ public class MultipleSupportApriori {
     }
 
 
-    private static class Candidate {
+    public static class Candidate {
 
         public Item items[];
         public double candidateSupport = 0.0;
@@ -338,6 +344,23 @@ public class MultipleSupportApriori {
                 string = string + ", Tailcount = " + tailcount + "";
 
             return string;
+        }
+
+        public String toString(boolean output) {
+            if (output) {
+                String itemNames = Arrays.toString(items);
+                itemNames = itemNames.replace("[", "{").replace("]", "}");
+
+                String string = "\t" + frequency + " : " + itemNames;
+
+                if (tailcount != 0)
+                    string = string + "\nTailcount = " + tailcount;
+
+                return string;
+            }
+            else {
+                return toString();
+            }
         }
 
         @Override
@@ -370,22 +393,33 @@ public class MultipleSupportApriori {
 
     public static void main(String[] args) {
         IOUtils.loadTransactions(IOUtils.INPUT_TRANSACTION_PATH, IOUtils.INPUT_PARAMETERS_PATH);
+        IOUtils.initializeOutputWriter(IOUtils.OUTPUT_RESULT);
+
+        IOUtils.writeItemsetHeader(itemSetCount);
+
+        System.out.println("Number of transactions : " + IOUtils.transactionCount);
 
         initCounter();
         System.out.println("\nInitial : " + Arrays.toString(counts));
 
         removeLessSupport();
         Candidate[] kitemset = kItemsetList.toArray(new Candidate[0]);
-        System.out.println("Candidate Prior Reduction : " + Arrays.toString(counts));
+        //System.out.println("Candidate Prior Reduction : " + Arrays.toString(counts));
         System.out.println("Reduction : " + Arrays.toString(kitemset));
 
-        while (counts.length > 1) { // implementation specific, need to change for MSApriori
+        IOUtils.writeCandidates(kitemset);
+        IOUtils.writeCandidateCounts(itemSetCount, kitemset.length);
+
+        int K = 2;
+        while (counts.length > 1 && K < 10) { // implementation specific, need to change for MSApriori
             System.out.println();
 
             if (counts.length > 1) {
                 computeCandidates();
-                if (counts.length >= 1)
+                if (counts.length >= 1) {
                     System.out.println("Candidates : " + Arrays.toString(counts));
+                    IOUtils.writeItemsetHeader(itemSetCount);
+                }
                 else {
                     break;
                 }
@@ -394,11 +428,17 @@ public class MultipleSupportApriori {
             removeLessSupport();
             kitemset = kItemsetList.toArray(new Candidate[0]);
 
-            System.out.println("Candidate Prior Reduction : " + Arrays.toString(counts));
-            System.out.println("Reduction : " + Arrays.toString(kitemset));
+            //System.out.println("Candidate Prior Must Have Reduction : " + Arrays.toString(counts));
+            System.out.println(itemSetCount + "-Itemset : " + Arrays.toString(kitemset));
             System.out.println("Total no. of " + itemSetCount + "-frequent itemsets : " + kitemset.length);
+
+            IOUtils.writeCandidates(kitemset);
+            IOUtils.writeCandidateCounts(itemSetCount, kitemset.length);
+
+            K++;
         }
 
+        IOUtils.closeWriter();
         //System.out.println("Final itemset : " + Arrays.toString(counts));
     }
 
