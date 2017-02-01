@@ -142,9 +142,10 @@ public class MultipleSupportApriori {
         ArrayList<Candidate> candidates = new ArrayList<>();
 
         System.out.println("Before Reduction : " + counts.length);
-        double minimumSupport = 0.0;
 
-        if (itemSetCount <= 2) {
+
+        if (itemSetCount == 1) {
+            double minimumSupport = 0.0;
             for (Candidate c : counts) { // Add all candidates who satisfy the min support criterion
                 minimumSupport = c.items[0].minSupport; // sorted in min support order, 1st item guaranteed to be smallest minSupport
 
@@ -152,7 +153,18 @@ public class MultipleSupportApriori {
                     candidates.add(c); // select only those candidates which have value above min support
             }
         }
+        else if (itemSetCount == 2) {
+            double lSupport = 0.0, hSupport = 0.0;
+            for (Candidate c : counts) { // Add all candidates who satisfy the min support criterion
+                lSupport = c.items[0].minSupport; // sorted in min support order, 1st item guaranteed to be smallest minSupport
+                hSupport = c.items[1].minSupport; // sorted in min support order, 2nd item guaranteed to be larger minSupport
+
+                if (hSupport >= lSupport && (hSupport - lSupport <= IOUtils.supportDifferenceConstraint))
+                    candidates.add(c); // select only those candidates which have value above min support
+            }
+        }
         else {
+            double minimumSupport;
             int subsetSize = itemSetCount - 1;
             boolean candidateMISTest = false;
             Item candidateSubset[] = new Item[subsetSize];
