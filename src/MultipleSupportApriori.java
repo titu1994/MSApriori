@@ -15,7 +15,6 @@ public class MultipleSupportApriori {
     private static ArrayList<Integer[]> permutations;
 
     private static ArrayList<Integer> reducedIndicesSet;
-    private static ArrayList<Integer[]> validSets;
 
     private static int itemSetCount = 1;
 
@@ -26,7 +25,6 @@ public class MultipleSupportApriori {
         kItemsetList = new ArrayList<>();
         permutations = new ArrayList<>();
         reducedIndicesSet = new ArrayList<>();
-        validSets = new ArrayList<>();
 
         // Temporary map which provides mapping from Item ID to 'counts' array index
         LinkedHashMap<Integer, Integer> countIndexMap = new LinkedHashMap<>();
@@ -143,7 +141,6 @@ public class MultipleSupportApriori {
 
         System.out.println("Before Reduction : " + counts.length);
 
-
         if (itemSetCount == 1) {
             double minimumSupport = 0.0;
             for (Candidate c : counts) { // Add all candidates who satisfy the min support criterion
@@ -175,6 +172,10 @@ public class MultipleSupportApriori {
                 reducedIndicesSet.add(i); // [0 to subsetSize-1] will be used for permutations
             }
 
+            permutations.clear();
+
+            permute(reducedIndicesSet, 0); // get all permutations
+
             for (Candidate c : counts) { // Add all candida
                 minimumSupport = c.items[0].minSupport; // sorted in min support order, 1st item guaranteed to be smallest minSupport
 
@@ -184,26 +185,16 @@ public class MultipleSupportApriori {
                     // Generate {k-1}-subsets s of candidate c which satisfy fact that {C1} belongs to s
                     Item[] reducedSet = Arrays.copyOfRange(c.items, 1, c.items.length); // all items other than C1
 
-                    permutations.clear();
-                    validSets.clear();
-
-                    permute(reducedIndicesSet, 0); // get all permutations
-
-                    for (Integer[] permutation : permutations) {
-                        if (permutation[0] == 0) {
-                            validSets.add(permutation); // select only those permutations which have the 1st element indices in 1st position
-                        }
-                    }
 
                     candidateSubset[0] = C1; // add 1st element to candidate subset
 
-                    for (int i = 0; i < validSets.size(); i++) {
+                    for (int i = 0; i < permutations.size(); i++) {
                         for (int j = 1; j < subsetSize; j++) {
                             // valid set contains [0, 1, 2], [0, 2, 1] for 3rd iteration.
                             // Now valid.get(0) = [0, 1, 2]
                             // Then, (valid.get(0)[1] - 1) = 1 - 1 = 0th index of reducedSet
                             // 0th index of reduced set = 20 for 3rd iteration of algorithm
-                            candidateSubset[j] = reducedSet[(validSets.get(i)[j] - 1)]; // candidate subset generated
+                            candidateSubset[j] = reducedSet[(permutations.get(i)[j] - 1)]; // candidate subset generated
                         }
 
                         candidateMISTest = candidateSubset[0].minSupport == candidateSubset[1].minSupport; // test as given in algorithm
@@ -318,8 +309,10 @@ public class MultipleSupportApriori {
     static void permute(ArrayList<Integer> arr, int k){
         for(int i = k; i < arr.size(); i++){
             Collections.swap(arr, i, k);
-            permute(arr, k+1);
-            Collections.swap(arr, k, i);
+            if (arr.get(0) == 0) { // Check to see if initial index is always 0, since we only need permutations with respect to initial element
+                permute(arr, k + 1);
+                Collections.swap(arr, k, i);
+            }
         }
         if (k == arr.size() -1){
             permutations.add(arr.toArray(new Integer[0]));
