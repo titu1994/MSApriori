@@ -125,18 +125,17 @@ public class MultipleSupportApriori {
                 }
 
                 Candidate p = new Candidate();
-                p.candidateSupport = supportCount;
+                p.candidateSupport = supportCount / (double) IOUtils.transactionCount;
                 p.frequency = supportCount;
                 p.items = itemset;
                 p.tailcount = tailCount;
 
-                if (p.candidateSupport > 0)
+                if (p.candidateSupport >= p.items[0].minSupport)
                     candidates.add(p); // Append the k-itemset
+                else {
+                    // System.out.println("Candidate Dropped : " + p + " Support : " + p.candidateSupport + " MIS(0) : " + p.items[0].minSupport);
+                }
             }
-        }
-
-        for (Candidate p : candidates) {
-            p.candidateSupport /= IOUtils.transactionCount; // normalize the pair support value to [0, 1]
         }
 
         counts = candidates.toArray(new Candidate[0]); // counts now updates with all of the new candidates
