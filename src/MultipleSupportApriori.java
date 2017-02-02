@@ -9,6 +9,7 @@ import java.util.*;
 public class MultipleSupportApriori {
 
     private static Candidate counts[];
+    private static Candidate initPassL[];
     private static HashMap<Integer, Double> initialCounts;
 
     private static ArrayList<Candidate> kItemsetList;
@@ -60,10 +61,15 @@ public class MultipleSupportApriori {
         for (Candidate c : counts) {
             initialCounts.put(c.items[0].itemID, c.candidateSupport);
         }
+
+        initPassL = Arrays.copyOf(counts, counts.length);
     }
 
     public static void computeCandidates() {
         ArrayList<Candidate> candidates = new ArrayList<>();
+
+        if (itemSetCount == 1)
+            counts = initPassL;
 
         for (int i = 0; i < counts.length; i++) { // search each and every pair of counts
             for (int j = i + 1; j < counts.length; j++) { // with all other candidates
@@ -149,20 +155,13 @@ public class MultipleSupportApriori {
             for (Candidate c : counts) { // Add all candidates who satisfy the min support criterion
                 minimumSupport = c.items[0].minSupport; // sorted in min support order, 1st item guaranteed to be smallest minSupport
 
-//                if (checkCandidateMustBeThere(c)) {
-//                    if (c.candidateSupport > 0)
-//                        candidates.add(c);
-//                }
-//                else {
-                    if (c.candidateSupport >= minimumSupport)
-                        candidates.add(c); // select only those candidates which have value above min support
-                    else {
-                        // System.out.println("Removing candidate : " + c + " Candidate Support :" + c.candidateSupport + " Minimum support : " + minimumSupport);
-                    }
-//                }
+                if (c.candidateSupport >= minimumSupport)
+                    candidates.add(c); // select only those candidates which have value above min support
+                else {
+                    // System.out.println("Removing candidate : " + c + " Candidate Support :" + c.candidateSupport + " Minimum support : " + minimumSupport);
+                }
             }
-        }
-        else if (itemSetCount == 2) {
+        } else if (itemSetCount == 2) {
             double lSupport = 0.0, hSupport = 0.0;
             for (Candidate c : counts) { // Add all candidates who satisfy the min support criterion
                 lSupport = initialCounts.get(c.items[0].itemID);
@@ -173,11 +172,10 @@ public class MultipleSupportApriori {
                 if (hSupport >= c.items[0].minSupport && (Math.abs(hSupport - lSupport) <= IOUtils.supportDifferenceConstraint))
                     candidates.add(c); // select only those candidates which have value above min support
                 else {
-                     // System.out.println("Removing candidate : " + c + " h Support :" + hSupport + " l Support: " + lSupport + " Diff : " + Math.abs(hSupport - lSupport) + " Minimum support : " + c.items[0].minSupport);
+                    // System.out.println("Removing candidate : " + c + " h Support :" + hSupport + " l Support: " + lSupport + " Diff : " + Math.abs(hSupport - lSupport) + " Minimum support : " + c.items[0].minSupport);
                 }
             }
-        }
-        else {
+        } else {
             double minimumSupport;
             int subsetSize = itemSetCount - 1;
             boolean candidateMISTest = false;
@@ -200,7 +198,7 @@ public class MultipleSupportApriori {
 
                 // System.out.println("Candidate : " + c + " H Support : " + hSupport + " L Support : " + lSupport);
 
-                if (Math.abs(hSupport - lSupport) <= IOUtils.supportDifferenceConstraint){ //
+                if (Math.abs(hSupport - lSupport) <= IOUtils.supportDifferenceConstraint) { //
                     Item C1 = c.items[0];
 
                     // Generate {k-1}-subsets s of candidate c which satisfy fact that {C1} belongs to s
@@ -231,13 +229,11 @@ public class MultipleSupportApriori {
 
                             if (candidateSubsetExistWithInCandidateGen) {
                                 candidates.add(c);
-                            }
-                            else {
+                            } else {
                                 // Delete the candidate (by not inserting it into next step candidates
                             }
                             break;
-                        }
-                        else {
+                        } else {
                             // Just add since it doesnt satisfy the check on line 9 pg 33 (Web Data Mining).
                             // Therefore no need to check anything to remove.
                             candidates.add(c);
@@ -273,8 +269,7 @@ public class MultipleSupportApriori {
 
             if (checkCandidateMustBeThere(p)) {
                 reducedCandidates.add(p);
-            }
-            else {
+            } else {
                 for (Item item : p.items) {
                     if (initialCounts.get(item.itemID) >= max)
                         max = initialCounts.get(item.itemID);
@@ -286,7 +281,7 @@ public class MultipleSupportApriori {
                 if (Math.abs(max - min) <= IOUtils.supportDifferenceConstraint)
                     reducedCandidates.add(p);
                 else {
-                    System.out.println("Removing candidate : " + p + " max :" + max + " min : " + min + " Diff : " + Math.abs(max - min) + " Minimum support : " + p.items[0].minSupport);
+                    // System.out.println("Removing candidate : " + p + " max :" + max + " min : " + min + " Diff : " + Math.abs(max - min) + " Minimum support : " + p.items[0].minSupport);
                 }
             }
         }
@@ -338,15 +333,15 @@ public class MultipleSupportApriori {
         return reducedCandidate;
     }
 
-    static void permute(ArrayList<Integer> arr, int k){
-        for(int i = k; i < arr.size(); i++){
+    static void permute(ArrayList<Integer> arr, int k) {
+        for (int i = k; i < arr.size(); i++) {
             Collections.swap(arr, i, k);
             if (arr.get(0) == 0) { // Check to see if initial index is always 0, since we only need permutations with respect to initial element
                 permute(arr, k + 1);
                 Collections.swap(arr, k, i);
             }
         }
-        if (k == arr.size() -1){
+        if (k == arr.size() - 1) {
             permutations.add(arr.toArray(new Integer[0]));
         }
     }
@@ -383,8 +378,7 @@ public class MultipleSupportApriori {
                     string = string + "\nTailcount = " + tailcount;
 
                 return string;
-            }
-            else {
+            } else {
                 return toString();
             }
         }
@@ -437,7 +431,7 @@ public class MultipleSupportApriori {
         IOUtils.writeCandidateCounts(itemSetCount, kitemset.length);
 
         int K = 2;
-        while (counts.length > 1 && K < 10) { // implementation specific, need to change for MSApriori
+        while (counts.length > 1 && K <= 10) { // implementation specific, need to change for MSApriori
             System.out.println();
 
             if (counts.length > 1) {
@@ -445,8 +439,7 @@ public class MultipleSupportApriori {
                 if (counts.length >= 1) {
                     System.out.println("Candidates : " + Arrays.toString(counts));
                     IOUtils.writeItemsetHeader(itemSetCount);
-                }
-                else {
+                } else {
                     break;
                 }
             }
