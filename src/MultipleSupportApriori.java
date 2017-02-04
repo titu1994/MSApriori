@@ -68,12 +68,12 @@ public class MultipleSupportApriori {
     public static void computeCandidates() {
         ArrayList<Candidate> candidates = new ArrayList<>();
 
-        if (itemSetCount == 1)
+        if (itemSetCount == 2)
             counts = initPassL;
 
         for (int i = 0; i < counts.length; i++) { // search each and every pair of counts
             for (int j = i + 1; j < counts.length; j++) { // with all other candidates
-                Item itemset[] = new Item[itemSetCount + 1]; // Increase size of itemset by 1
+                Item itemset[] = new Item[itemSetCount]; // Increase size of itemset by 1
                 Item itemsI[] = counts[i].items; // Convenience to select Current itemset
                 Item itemsJ[] = counts[j].items; // Convenience to select all other itemset iteratively
 
@@ -133,14 +133,12 @@ public class MultipleSupportApriori {
                 if (p.candidateSupport >= p.items[0].minSupport)
                     candidates.add(p); // Append the k-itemset
                 else {
-                    // System.out.println("Candidate Dropped : " + p + " Support : " + p.candidateSupport + " MIS(0) : " + p.items[0].minSupport);
+
                 }
             }
         }
 
         counts = candidates.toArray(new Candidate[0]); // counts now updates with all of the new candidates
-
-        itemSetCount++; // marks the k in k-itemset
     }
 
 
@@ -171,7 +169,7 @@ public class MultipleSupportApriori {
                 if (hSupport >= c.items[0].minSupport && (Math.abs(hSupport - lSupport) <= IOUtils.supportDifferenceConstraint))
                     candidates.add(c); // select only those candidates which have value above min support
                 else {
-                    // System.out.println("Removing candidate : " + c + " h Support :" + hSupport + " l Support: " + lSupport + " Diff : " + Math.abs(hSupport - lSupport) + " Minimum support : " + c.items[0].minSupport);
+                     // System.out.println("Removing candidate : " + c + " h Support :" + hSupport + " l Support: " + lSupport + " Diff : " + Math.abs(hSupport - lSupport) + " Minimum support : " + c.items[0].minSupport);
                 }
             }
         } else {
@@ -258,6 +256,8 @@ public class MultipleSupportApriori {
         System.out.println("After removing 'must be at least one' violations : " + kItemsetList.size());
 
         counts = candidates.toArray(new Candidate[0]); // replace counts with reduced set
+
+        itemSetCount++; // marks the k in k-itemset
     }
 
     public static ArrayList<Candidate> handleSupportDifferenceConstraint(ArrayList<Candidate> candidates) {
@@ -427,7 +427,7 @@ public class MultipleSupportApriori {
         System.out.println("Reduction : " + Arrays.toString(kitemset));
 
         IOUtils.writeCandidates(kitemset);
-        IOUtils.writeCandidateCounts(itemSetCount, kitemset.length);
+        IOUtils.writeCandidateCounts(1, kitemset.length);
 
         int K = 2;
         while (counts.length > 1 && K <= 10) { // implementation specific, need to change for MSApriori
@@ -437,7 +437,6 @@ public class MultipleSupportApriori {
                 computeCandidates();
                 if (counts.length >= 1) {
                     System.out.println("Candidates : " + Arrays.toString(counts));
-                    IOUtils.writeItemsetHeader(itemSetCount);
                 } else {
                     break;
                 }
@@ -447,11 +446,13 @@ public class MultipleSupportApriori {
             kitemset = kItemsetList.toArray(new Candidate[0]);
 
             //System.out.println("Candidate Prior Must Have Reduction : " + Arrays.toString(counts));
+
+            IOUtils.writeItemsetHeader(itemSetCount - 1);
             System.out.println(itemSetCount + "-Itemset : " + Arrays.toString(kitemset));
-            System.out.println("Total no. of " + itemSetCount + "-frequent itemsets : " + kitemset.length);
+            System.out.println("Total no. of " + (itemSetCount - 1) + "-frequent itemsets : " + kitemset.length);
 
             IOUtils.writeCandidates(kitemset);
-            IOUtils.writeCandidateCounts(itemSetCount, kitemset.length);
+            IOUtils.writeCandidateCounts(itemSetCount - 1, kitemset.length);
 
             K++;
         }

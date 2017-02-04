@@ -37,7 +37,7 @@ public class Item implements Comparable<Item>, Cloneable {
 
     @Override
     public int compareTo(Item o) {
-        int val = (int) ((this.minSupport - o.minSupport) * 100);
+        int val = (int) ((this.minSupport - o.minSupport) * 1e19);
 
         if (val == 0)
             return this.itemID - o.itemID;
