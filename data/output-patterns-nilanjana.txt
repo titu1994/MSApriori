@@ -1,0 +1,44 @@
+Frequent 1-itemsets
+
+	150 : {130}
+	130 : {180}
+	141 : {170}
+
+	Total number of frequent 1-itemsets =  3
+
+
+Frequent 2-itemsets
+
+	36 : {40, 130}
+Tailcount = 900
+	43 : {40, 180}
+Tailcount = 1040
+	52 : {150, 130}
+Tailcount = 900
+	48 : {150, 180}
+Tailcount = 1040
+	48 : {150, 170}
+Tailcount = 1410
+	36 : {120, 180}
+Tailcount = 1040
+	44 : {120, 170}
+Tailcount = 1410
+	40 : {140, 130}
+Tailcount = 900
+	37 : {140, 180}
+Tailcount = 1040
+	42 : {140, 170}
+Tailcount = 1410
+	47 : {70, 180}
+Tailcount = 1040
+	45 : {70, 170}
+Tailcount = 1410
+	51 : {90, 130}
+Tailcount = 900
+	53 : {90, 180}
+Tailcount = 1040
+	45 : {90, 170}
+Tailcount = 1410
+
+	Total number of frequent 2-itemsets =  15
+

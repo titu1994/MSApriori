@@ -446,13 +446,13 @@ public class MultipleSupportApriori {
             kitemset = kItemsetList.toArray(new Candidate[0]);
 
             //System.out.println("Candidate Prior Must Have Reduction : " + Arrays.toString(counts));
-
-            IOUtils.writeItemsetHeader(itemSetCount - 1);
-            System.out.println(itemSetCount + "-Itemset : " + Arrays.toString(kitemset));
-            System.out.println("Total no. of " + (itemSetCount - 1) + "-frequent itemsets : " + kitemset.length);
-
-            IOUtils.writeCandidates(kitemset);
-            IOUtils.writeCandidateCounts(itemSetCount - 1, kitemset.length);
+            if(kitemset.length > 0) {
+                IOUtils.writeItemsetHeader(itemSetCount - 1);
+                System.out.println(itemSetCount + "-Itemset : " + Arrays.toString(kitemset));
+                System.out.println("Total no. of " + (itemSetCount - 1) + "-frequent itemsets : " + kitemset.length);
+                IOUtils.writeCandidates(kitemset);
+                IOUtils.writeCandidateCounts(itemSetCount - 1, kitemset.length);
+            }
 
             K++;
         }
