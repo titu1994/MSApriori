@@ -62,7 +62,20 @@ public class MultipleSupportApriori {
             initialCounts.put(c.items[0].itemID, c.candidateSupport);
         }
 
-        initPassL = Arrays.copyOf(counts, counts.length);
+        Arrays.sort(counts);
+
+        ArrayList<Candidate> initPassList = new ArrayList<>();
+        initPassList.add(counts[0]);
+
+        double candidate1MIS = counts[0].items[0].minSupport;
+
+        for (int i = 1; i < counts.length; i++) {
+            if (counts[i].candidateSupport >= candidate1MIS)
+                initPassList.add(counts[i]);
+        }
+        initPassL = initPassList.toArray(new Candidate[0]);
+
+        // initPassL = Arrays.copyOf(counts, counts.length);
     }
 
     public static void computeCandidates() {
@@ -346,7 +359,7 @@ public class MultipleSupportApriori {
     }
 
 
-    public static class Candidate {
+    public static class Candidate implements Comparable<Candidate> {
 
         public Item items[];
         public double candidateSupport = 0.0;
@@ -408,6 +421,12 @@ public class MultipleSupportApriori {
             }
             return false;
         }
+
+        @Override
+        public int compareTo(Candidate o) {
+            double diff = this.items[0].minSupport - o.items[0].minSupport;
+            return (int) (diff * 1e19);
+        }
     }
 
     public static void main(String[] args) {
@@ -454,12 +473,15 @@ public class MultipleSupportApriori {
                 IOUtils.writeCandidates(kitemset);
                 IOUtils.writeCandidateCounts(itemSetCount - 1, kitemset.length);
             }
+            else {
+                System.out.println("No " + itemSetCount + "-itemset candidate. Not writing to output file.");
+            }
 
             K++;
         }
 
         IOUtils.closeWriter();
-        System.out.println("Execution Time (in ms) : " + (System.currentTimeMillis() - startTime));
+        System.out.println("\nExecution Time (in ms) : " + (System.currentTimeMillis() - startTime));
         //System.out.println("Final itemset : " + Arrays.toString(counts));
     }
 

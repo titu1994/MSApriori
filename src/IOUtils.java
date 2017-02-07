@@ -14,8 +14,8 @@ import java.util.regex.Pattern;
 public class IOUtils {
 
     // Relative path of default files
-    public static final String INPUT_TRANSACTION_PATH = "data\\input-data-4.txt";
-    public static final String INPUT_PARAMETERS_PATH = "data\\parameter-file-4.txt";
+    public static final String INPUT_TRANSACTION_PATH = "data\\input-data-anna.txt";
+    public static final String INPUT_PARAMETERS_PATH = "data\\parameter-file-anna.txt";
 
     public static final String OUTPUT_RESULT = "data\\output.txt";
 
