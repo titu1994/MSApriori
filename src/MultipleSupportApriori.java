@@ -417,6 +417,7 @@ public class MultipleSupportApriori {
         IOUtils.writeItemsetHeader(itemSetCount);
 
         System.out.println("Number of transactions : " + IOUtils.transactionCount);
+        long startTime = System.currentTimeMillis();
 
         initCounter();
         System.out.println("\nInitial : " + Arrays.toString(counts));
@@ -458,6 +459,7 @@ public class MultipleSupportApriori {
         }
 
         IOUtils.closeWriter();
+        System.out.println("Execution Time (in ms) : " + (System.currentTimeMillis() - startTime));
         //System.out.println("Final itemset : " + Arrays.toString(counts));
     }
 

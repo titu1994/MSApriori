@@ -1,43 +1,17 @@
 Frequent 1-itemsets
 
-	150 : {130}
-	141 : {170}
-	130 : {180}
+	4192 : {20}
+	4038 : {34}
+	4106 : {64}
+	4008 : {84}
+	4078 : {92}
+	4049 : {154}
+	4078 : {184}
+	4104 : {192}
+	4022 : {202}
+	4046 : {250}
+	4007 : {254}
+	4160 : {276}
 
-	Total number of frequent 1-itemsets = 3
-
-Frequent 2-itemsets
-
-	36 : {40, 130}
-Tailcount = 150
-	43 : {40, 180}
-Tailcount = 130
-	45 : {70, 170}
-Tailcount = 141
-	47 : {70, 180}
-Tailcount = 130
-	51 : {90, 130}
-Tailcount = 150
-	45 : {90, 170}
-Tailcount = 141
-	53 : {90, 180}
-Tailcount = 130
-	44 : {120, 170}
-Tailcount = 141
-	36 : {120, 180}
-Tailcount = 130
-	40 : {140, 130}
-Tailcount = 150
-	52 : {150, 130}
-Tailcount = 150
-	42 : {140, 170}
-Tailcount = 141
-	37 : {140, 180}
-Tailcount = 130
-	48 : {150, 170}
-Tailcount = 141
-	48 : {150, 180}
-Tailcount = 130
-
-	Total number of frequent 2-itemsets = 15
+	Total number of frequent 1-itemsets = 12
 
